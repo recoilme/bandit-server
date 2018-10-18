@@ -3,10 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/peleteiro/bandit-server/repository"
-	"github.com/peleteiro/bandit-server/strategies"
 	"net/http"
 	"strings"
+
+	"github.com/peleteiro/bandit-server/repository"
+	"github.com/peleteiro/bandit-server/strategies"
 )
 
 func toJson(r map[string]string) string {
@@ -45,7 +46,9 @@ func doPut(repo repository.Repository, w http.ResponseWriter, r *http.Request) {
 	doDefaultHeaders(w, r)
 
 	r.ParseForm()
+	//log.Println("Put")
 	for context, values := range r.Form {
+		//log.Println(values[0])
 		repo.Reward(context, values[0])
 	}
 

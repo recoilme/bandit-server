@@ -1,8 +1,9 @@
 package strategies
 
 import (
-	"github.com/peleteiro/bandit-server/repository"
 	"math"
+
+	"github.com/peleteiro/bandit-server/repository"
 )
 
 type UCB1 struct{}
@@ -19,7 +20,7 @@ func (_ UCB1) Choose(repo repository.Repository, experiment string, arms []strin
 
 func getHighestScoreArm(repo repository.Repository, experiment string, arms []string) string {
 	var highestArm string
-	var highestScore float64 = 0
+	var highestScore float64
 
 	var expData = repo.Get(experiment, arms)
 	for arm, armData := range expData.Arms {
@@ -28,7 +29,7 @@ func getHighestScoreArm(repo repository.Repository, experiment string, arms []st
 		}
 
 		var score = calcScore(expData.TotalHits, armData.Hits, armData.Rewards)
-
+		//log.Println(arm, expData.TotalHits, armData.Hits, armData.Rewards, score)
 		if score > highestScore {
 			highestArm = arm
 			highestScore = score
@@ -39,5 +40,5 @@ func getHighestScoreArm(repo repository.Repository, experiment string, arms []st
 }
 
 func calcScore(totalHits int64, hits int64, rewards int64) float64 {
-	return float64((rewards/4)/hits) + math.Sqrt((2*math.Log(float64(totalHits)))/float64(hits))
+	return float64(float64(rewards)/float64(hits)) + math.Sqrt((2*math.Log(float64(totalHits)))/float64(hits))
 }
