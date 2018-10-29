@@ -14,4 +14,5 @@ type Repository interface {
 	Get(experiment string, arms []string) ExperimentData
 	Hit(experiment string, arm string)
 	Reward(experiment string, arm string)
+	Rewards(experiment string, arm string, reward int)
 }

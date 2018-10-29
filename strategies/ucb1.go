@@ -3,7 +3,7 @@ package strategies
 import (
 	"math"
 
-	"github.com/peleteiro/bandit-server/repository"
+	"github.com/recoilme/bandit-server/repository"
 )
 
 type UCB1 struct{}

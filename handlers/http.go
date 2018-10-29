@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/peleteiro/bandit-server/repository"
-	"github.com/peleteiro/bandit-server/strategies"
+	"github.com/recoilme/bandit-server/repository"
+	"github.com/recoilme/bandit-server/strategies"
 )
 
 func toJson(r map[string]string) string {
@@ -48,8 +49,15 @@ func doPut(repo repository.Repository, w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	//log.Println("Put")
 	for context, values := range r.Form {
-		//log.Println(values[0])
-		repo.Reward(context, values[0])
+		//fmt.Println(values[0], context)
+		if strings.Contains(values[0], ",") {
+			arr := strings.Split(values[0], ",")
+			rew, _ := strconv.Atoi(arr[1])
+			repo.Rewards(context, arr[0], rew)
+		} else {
+			repo.Reward(context, values[0])
+		}
+
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")

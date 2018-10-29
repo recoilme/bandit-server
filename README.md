@@ -16,6 +16,7 @@ John Myles White has an awesome treatise on Bandit implementations in his book [
 2. Run ```bandit-server --port=3000```
 3. Play ``curl http://localhost:3000/ucb1?downloadButtonColor=black,white,blue\&downloadButtonText=default,now``
 4. Reward ``curl -X PUT --data "downloadButtonColor=blue" http://localhost:3000/ucb1``
+5. Reward with specific value ``curl -X PUT --data "downloadButtonColor=blue,6" http://localhost:3000/ucb1``
 
 ## Determining what to test
 

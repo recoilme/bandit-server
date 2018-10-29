@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/peleteiro/bandit-server/assets"
-	"github.com/peleteiro/bandit-server/handlers"
-	"github.com/peleteiro/bandit-server/repository"
-	"github.com/peleteiro/bandit-server/strategies"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/recoilme/bandit-server/assets"
+	"github.com/recoilme/bandit-server/handlers"
+	"github.com/recoilme/bandit-server/repository"
+	"github.com/recoilme/bandit-server/strategies"
 )
 
 var port int = 3000

@@ -1,9 +1,10 @@
 package strategies
 
 import (
-	"github.com/peleteiro/bandit-server/repository"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/recoilme/bandit-server/repository"
+	"github.com/stretchr/testify/assert"
 )
 
 var strgy = NewUCB1()

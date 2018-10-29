@@ -20,7 +20,7 @@ func (v memoryMap) Get(experiment string, arm string) int64 {
 	return *count
 }
 
-func (v memoryMap) Incr(experiment string, arm string) {
+func (v memoryMap) Incr(experiment string, arm string, add int) {
 	ctx, ok := v[experiment]
 	if !ok {
 		ctx = make(map[string]*int64)
@@ -33,8 +33,12 @@ func (v memoryMap) Incr(experiment string, arm string) {
 		count = &inital
 		ctx[arm] = count
 	}
+	if add == 0 {
+		atomic.AddInt64(count, 1)
+	} else {
+		atomic.AddInt64(count, int64(add))
+	}
 
-	atomic.AddInt64(count, 1)
 }
 
 type Memory struct {
@@ -59,9 +63,14 @@ func (v Memory) Get(experiment string, arms []string) ExperimentData {
 }
 
 func (v Memory) Hit(experiment string, arm string) {
-	v.hits.Incr(experiment, arm)
+	v.hits.Incr(experiment, arm, 0)
 }
 
 func (v Memory) Reward(experiment string, arm string) {
-	v.rewards.Incr(experiment, arm)
+	v.rewards.Incr(experiment, arm, 0)
+}
+
+func (v Memory) Rewards(experiment string, arm string, incr int) {
+	//log.Println(experiment, arm, incr)
+	v.rewards.Incr(experiment, arm, incr)
 }

@@ -2,10 +2,11 @@ package repository
 
 import (
 	"fmt"
-	"github.com/dropbox/godropbox/memcache"
-	"github.com/dropbox/godropbox/net2"
 	"strconv"
 	"time"
+
+	"github.com/dropbox/godropbox/memcache"
+	"github.com/dropbox/godropbox/net2"
 )
 
 const HIT = "h"
@@ -34,9 +35,13 @@ func (v Memcached) mcGet(kind string, experiment string, arm string) int64 {
 	return count
 }
 
-func (v Memcached) mcIncr(kind string, experiment string, arm string) {
+func (v Memcached) mcIncr(kind string, experiment string, arm string, add int) {
 	key := fmt.Sprintf("%s:%s:%s", kind, experiment, arm)
-	v.mc.Increment(key, 1, 1, 0)
+	incr := uint64(1)
+	if add != 0 {
+		incr = uint64(add)
+	}
+	v.mc.Increment(key, incr, 1, 0)
 }
 
 func (v Memcached) Get(experiment string, arms []string) ExperimentData {
@@ -53,9 +58,13 @@ func (v Memcached) Get(experiment string, arms []string) ExperimentData {
 }
 
 func (v Memcached) Hit(experiment string, arm string) {
-	v.mcIncr(HIT, experiment, arm)
+	v.mcIncr(HIT, experiment, arm, 0)
 }
 
 func (v Memcached) Reward(experiment string, arm string) {
-	v.mcIncr(REWARD, experiment, arm)
+	v.mcIncr(REWARD, experiment, arm, 0)
+}
+
+func (v Memcached) Rewards(experiment string, arm string, add int) {
+	v.mcIncr(REWARD, experiment, arm, add)
 }

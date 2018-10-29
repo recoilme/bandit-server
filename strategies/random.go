@@ -1,8 +1,9 @@
 package strategies
 
 import (
-	"github.com/peleteiro/bandit-server/repository"
 	"math/rand"
+
+	"github.com/recoilme/bandit-server/repository"
 )
 
 type Random struct{}
