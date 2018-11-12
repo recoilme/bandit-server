@@ -12,6 +12,7 @@ type ArmData struct {
 
 type Repository interface {
 	Get(experiment string, arms []string) ExperimentData
+	//	Gets(experiment string, arms []string, count int) []string
 	Hit(experiment string, arm string)
 	Reward(experiment string, arm string)
 	Rewards(experiment string, arm string, reward int)

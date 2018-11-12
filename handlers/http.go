@@ -11,6 +11,16 @@ import (
 	"github.com/recoilme/bandit-server/strategies"
 )
 
+type postStruct struct {
+	Group    string   `json:"group"`
+	Variants []string `json:"variants"`
+	Count    int      `json:"count"`
+}
+
+type variants struct {
+	Variants []string `json:"variants"`
+}
+
 func toJson(r map[string]string) string {
 	b, err := json.Marshal(r)
 	if err != nil {
@@ -69,6 +79,8 @@ func NewHttpHandler(strategy strategies.Strategy, repo repository.Repository) fu
 		switch r.Method {
 		case "GET":
 			doGet(strategy, repo, w, r)
+		case "POST":
+			doPost(strategy, repo, w, r)
 		case "PUT":
 			doPut(repo, w, r)
 		case "OPTIONS":
@@ -77,4 +89,28 @@ func NewHttpHandler(strategy strategies.Strategy, repo repository.Repository) fu
 			http.Error(w, "Method Not Allowed", 405)
 		}
 	}
+}
+
+func doPost(strategy strategies.Strategy, repo repository.Repository, w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	decoder := json.NewDecoder(r.Body)
+	var p postStruct
+	err := decoder.Decode(&p)
+
+	var result map[string]string = make(map[string]string)
+	if err != nil {
+		result["error"] = err.Error()
+		fmt.Fprint(w, toJson(result))
+		return
+	}
+	//log.Println("P:", p)
+	res := strategy.ChooseMany(repo, p.Group, p.Variants, p.Count)
+	//var v variants
+	b, err := json.Marshal(res)
+	if err != nil {
+		result["error"] = err.Error()
+		fmt.Fprint(w, toJson(result))
+		return
+	}
+	fmt.Fprint(w, string(b))
 }

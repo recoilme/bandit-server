@@ -15,6 +15,7 @@ John Myles White has an awesome treatise on Bandit implementations in his book [
 1. Install bandit-server. ``go get github.com/peleteiro/bandit-server``
 2. Run ```bandit-server --port=3000```
 3. Play ``curl http://localhost:3000/ucb1?downloadButtonColor=black,white,blue\&downloadButtonText=default,now``
+3.1 Post ``curl -X POST --data '{"group":"downloadButtonColor","variants":["blue","green","red"],"count":2}' http://localhost:3000/ucb1``
 4. Reward ``curl -X PUT --data "downloadButtonColor=blue" http://localhost:3000/ucb1``
 5. Reward with specific value ``curl -X PUT --data "downloadButtonColor=blue,6" http://localhost:3000/ucb1``
 
