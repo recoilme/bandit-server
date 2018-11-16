@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -63,8 +64,10 @@ func doPut(repo repository.Repository, w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(values[0], ",") {
 			arr := strings.Split(values[0], ",")
 			rew, _ := strconv.Atoi(arr[1])
+			fmt.Println(context, arr[0], rew)
 			repo.Rewards(context, arr[0], rew)
 		} else {
+			fmt.Println(context, values[0])
 			repo.Reward(context, values[0])
 		}
 
@@ -103,7 +106,7 @@ func doPost(strategy strategies.Strategy, repo repository.Repository, w http.Res
 		fmt.Fprint(w, toJson(result))
 		return
 	}
-	//log.Println("P:", p)
+	log.Println("P:", p)
 	res := strategy.ChooseMany(repo, p.Group, p.Variants, p.Count)
 	//var v variants
 	b, err := json.Marshal(res)
