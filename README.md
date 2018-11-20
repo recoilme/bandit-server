@@ -17,11 +17,10 @@ Hits - это количество показов объявлений. Для �
 
 Запрос идет на url http://localhost:3000/hits/domainid42 
 
-где domainid42 - это группа, по которой считатеся статистика. В нашем случае domainId.
+где domainid42 - это группа, по которой считатеся статистика. В нашем случае domainId. Но может быть любая строка.
 
 Метод - POST
 
-Но может быть любая строка.
 
 Статистика передается в виде json массива. Заголовок: Content-Type: application/json
 
@@ -78,7 +77,29 @@ curl -X GET http://localhost:3000/stats/domainid42/2
 ```
 Это массив, он отсортирован по параметру score. 
 
+## Debug
 
+Для запуска в режиме отладки необходимо передать флаг debug=true
+
+Пример отладчика:
+
+```
+./bandit-server --debug=true
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /                         --> main.ok (3 handlers)
+[GIN-debug] GET    /stats/:group/:count      --> main.stats (3 handlers)
+[GIN-debug] POST   /:param/:group            --> main.write (3 handlers)
+[{ads 1 1} {ads 2 1}]
+[GIN] 2018/11/20 - 19:06:34 | 200 |    2.767846ms |             ::1 | POST     /hits/domainid42
+[{ads 1 1} {ads 2 1}]
+[GIN] 2018/11/20 - 19:06:56 | 200 |     386.706µs |             ::1 | POST     /hits/domainid42
+[{ads 2 1}]
+[GIN] 2018/11/20 - 19:07:12 | 200 |    2.396616ms |             ::1 | POST     /rewards/domainid42
+[GIN] 2018/11/20 - 19:07:21 | 200 |     710.533µs |             ::1 | GET      /stats/domainid42/2
+```
 # License
 
 Bandit-server is released under the [MIT License](http://www.opensource.org/licenses/MIT).
