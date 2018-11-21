@@ -7,6 +7,12 @@ Bandit-server is a [Multi-Armed Bandit](http://en.wikipedia.org/wiki/Multi-armed
 1. Install bandit-server. ``go get github.com/recoilme/bandit-server``
 2. Run ```bandit-server --port=3000 --debug=true```
 
+## Routers
+
+GET    /                         --> main.ok (3 handlers)    - for check status
+GET    /stats/:group/:count      --> main.stats (3 handlers) - for get stats by count arms
+POST   /stats/:group/:count      --> main.stats (3 handlers) - for get stats by arms
+POST   /write/:param/:group      --> main.write (3 handlers) - for write hits & rewards
 
 ## Hits
 
