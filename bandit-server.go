@@ -28,6 +28,10 @@ type Hit struct {
 	Cnt int    `json:"cnt"`
 }
 
+type Arms struct {
+	Arm string `json:"arm"`
+}
+
 type Stat struct {
 	Arm   string  `json:"arm"`
 	Hit   int     `json:"hit"`
@@ -108,7 +112,8 @@ func InitRouter() *gin.Engine {
 
 	r.GET("/", ok)
 	r.GET("/stats/:group/:count", stats)
-	r.POST("/:param/:group", write)
+	r.POST("/stats/:group/:count", stats)
+	r.POST("/write/:param/:group", write)
 
 	return r
 }
@@ -167,6 +172,15 @@ func renderError(c *gin.Context, err error) {
 func stats(c *gin.Context) {
 	var err error
 	group := c.Param("group")
+	var arms = make([]Arms, 0, 0)
+	switch c.Request.Method {
+	case "POST":
+		err = c.ShouldBind(&arms)
+		if err != nil {
+			renderError(c, err)
+			return
+		}
+	}
 
 	count, _ := strconv.Atoi(c.Param("count"))
 	dbhits, err := pudge.Open("hits/"+group, nil)
@@ -179,7 +193,15 @@ func stats(c *gin.Context) {
 		renderError(c, err)
 		return
 	}
-	data, err := dbhits.Keys(nil, 0, 0, true)
+	var data = make([][]byte, 0, 0)
+	if len(arms) > 0 {
+		for _, arm := range arms {
+			data = append(data, []byte(arm.Arm))
+		}
+	} else {
+		data, err = dbhits.Keys(nil, 0, 0, true)
+	}
+
 	if err != nil {
 		renderError(c, err)
 		return
@@ -188,8 +210,9 @@ func stats(c *gin.Context) {
 	var totalHits int
 	for _, key := range data {
 		var hit, rew int
-		err = dbhits.Get(key, &hit)
-		if err != nil {
+		errGet := dbhits.Get(key, &hit)
+		if errGet != nil && errGet != pudge.ErrKeyNotFound {
+			err = errGet
 			break
 		}
 		dbrew.Get(key, &rew)

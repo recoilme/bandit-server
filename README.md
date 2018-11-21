@@ -15,7 +15,7 @@ Hits - это количество показов объявлений. Для �
 - название объявления, строка, это рука многорукого бандита  (arm)
 - количество, (cnt) - целое число
 
-Запрос идет на url http://localhost:3000/hits/domainid42 
+Запрос идет на url http://localhost:3000/write/hits/domainid42 
 
 где domainid42 - это группа, по которой считатеся статистика. В нашем случае domainId. Но может быть любая строка.
 
@@ -27,7 +27,7 @@ Hits - это количество показов объявлений. Для �
 
 Пример запроса: 
 ```
-curl -X POST --data '[{"arm":"ads 1","cnt":1},{"arm":"ads 2","cnt":1}]' -H "Content-Type: application/json" http://localhost:3000/hits/domainid42
+curl -X POST --data '[{"arm":"ads 1","cnt":1},{"arm":"ads 2","cnt":1}]' -H "Content-Type: application/json" http://localhost:3000/write/hits/domainid42
 ```
 
 На этот запрос сервер ответит:
@@ -42,7 +42,7 @@ ok
 Пример "кривого", неправильного запроса:
 
 ```
-curl -v -X POST --data '[{"arm":"ads 1","cnt":1},{"arm":"ads 2","cnt":"2"]' -H "Content-Type: application/json" http://localhost:3000/hits/domainid42
+curl -v -X POST --data '[{"arm":"ads 1","cnt":1},{"arm":"ads 2","cnt":"2"]' -H "Content-Type: application/json" http://localhost:3000/write/hits/domainid42
 ```
 Ответ с ошибкой:
 ```
@@ -59,7 +59,7 @@ Rewards - это награда за клик по объявлению.
 
 Пример:
 ```
-curl -X POST --data '[{"arm":"ads 2","cnt":1}]' -H "Content-Type: application/json" http://localhost:3000/rewards/domainid42
+curl -X POST --data '[{"arm":"ads 2","cnt":1}]' -H "Content-Type: application/json" http://localhost:3000/write/rewards/domainid42
 ```
 
 ## Stats
@@ -76,6 +76,16 @@ curl -X GET http://localhost:3000/stats/domainid42/2
 [{"arm":"var2","hit":1,"rew":0,"score":1.9727697022487511},{"arm":"ads 2","hit":3,"rew":1,"score":1.4723124519757878}]
 ```
 Это массив, он отсортирован по параметру score. 
+
+Также можно запросить статистику по переданным "рукам", при помощи Post запроса с массивом "рук" 
+Пример:
+
+```
+curl -X POST --data '[{"arm":"ads 2"},{"arm":"1"}]' -H "Content-Type: application/json" http://localhost:3000/stats/domainid42/3
+
+Ответ:
+[{"arm":"1","hit":0,"rew":0,"score":100},{"arm":"ads 2","hit":3,"rew":2,"score":1.5224751688711062}]
+```
 
 ## Debug
 
