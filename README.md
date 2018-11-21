@@ -9,10 +9,12 @@ Bandit-server is a [Multi-Armed Bandit](http://en.wikipedia.org/wiki/Multi-armed
 
 ## Routers
 
+```
 GET    /                         --> main.ok (3 handlers)    - for check status
 GET    /stats/:group/:count      --> main.stats (3 handlers) - for get stats by count arms
 POST   /stats/:group/:count      --> main.stats (3 handlers) - for get stats by arms
 POST   /write/:param/:group      --> main.write (3 handlers) - for write hits & rewards
+```
 
 ## Hits
 
@@ -23,7 +25,7 @@ Hits - это количество показов объявлений. Для �
 
 Запрос идет на url http://localhost:3000/write/hits/domainid42 
 
-где domainid42 - это группа, по которой считатеся статистика. В нашем случае domainId. Но может быть любая строка.
+где domainid42 - это группа, по которой считается статистика. В нашем случае domainId. Но может быть любая строка.
 
 Метод - POST
 
@@ -84,6 +86,8 @@ curl -X GET http://localhost:3000/stats/domainid42/2
 Это массив, он отсортирован по параметру score. 
 
 Также можно запросить статистику по переданным "рукам", при помощи Post запроса с массивом "рук" 
+
+
 Пример:
 
 ```
