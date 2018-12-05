@@ -144,9 +144,6 @@ func write(c *gin.Context) {
 		renderError(c, err)
 		return
 	}
-	if debug {
-		log.Println(hits)
-	}
 
 	for _, h := range hits {
 		_, err = pudge.Counter(dbPrefix+"/"+group, h.Arm, h.Cnt)
@@ -163,6 +160,7 @@ func write(c *gin.Context) {
 
 func renderError(c *gin.Context, err error) {
 	if err != nil {
+		log.Println(err)
 		c.Error(err)
 		c.JSON(http.StatusUnprocessableEntity, c.Errors)
 		return
@@ -207,6 +205,7 @@ func stats(c *gin.Context) {
 		return
 	}
 	var stats = make([]Stat, 0, 0)
+	//var totalrew = 0
 	var totalHits int
 	for _, key := range data {
 		var hit, rew int
@@ -216,6 +215,7 @@ func stats(c *gin.Context) {
 			break
 		}
 		dbrew.Get(key, &rew)
+		//totalrew += rew
 		var stat Stat
 		stat.Arm = string(key)
 		stat.Hit = hit
@@ -238,15 +238,15 @@ func stats(c *gin.Context) {
 		renderError(c, err)
 		return
 	}
-	if debug {
-		//log.Println("Score:", scores, stats[0].calcScore(12))
-	}
+	//log.Println("total rew:", totalrew)
+	//log.Println("Score:", scores, stats[0].calcScore(12))
+
 	c.JSON(http.StatusOK, scores)
 }
 
 func (st *Stat) calcScore(totalHits int) float64 {
 	if st.Hit == 0 {
-		return float64(100)
+		return float64(math.Sqrt((2 * math.Log(float64(totalHits)))))
 	}
 	return float64(st.Rew)/float64(st.Hit) + math.Sqrt((2*math.Log(float64(totalHits)))/float64(st.Hit))
 }
