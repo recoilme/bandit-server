@@ -7,5 +7,5 @@ import (
 )
 
 func TestZero(t *testing.T) {
-	log.Println(math.Sqrt((2 * math.Log(float64(10)))))
+	log.Println(math.Sqrt((2 * math.Log(float64(1)))))
 }

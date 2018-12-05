@@ -246,7 +246,7 @@ func stats(c *gin.Context) {
 
 func (st *Stat) calcScore(totalHits int) float64 {
 	if st.Hit == 0 {
-		return float64(math.Sqrt((2 * math.Log(float64(totalHits)))))
+		return float64(math.Sqrt((2 * math.Log(float64(totalHits+1)))))
 	}
 	return float64(st.Rew)/float64(st.Hit) + math.Sqrt((2*math.Log(float64(totalHits)))/float64(st.Hit))
 }
