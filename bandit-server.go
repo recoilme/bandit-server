@@ -21,6 +21,7 @@ import (
 var (
 	port  = 3000
 	debug = false
+	cfg   *pudge.Config
 )
 
 type Hit struct {
@@ -42,6 +43,8 @@ type Stat struct {
 func init() {
 	flag.IntVar(&port, "port", 3000, "http port")
 	flag.BoolVar(&debug, "debug", false, "--debug=true")
+	cfg = pudge.DefaultConfig()
+	cfg.StoreMode = 2
 }
 
 func main() {
@@ -144,9 +147,13 @@ func write(c *gin.Context) {
 		renderError(c, err)
 		return
 	}
-
+	db, err := pudge.Open(dbPrefix+"/"+group, cfg)
+	if err != nil {
+		renderError(c, err)
+		return
+	}
 	for _, h := range hits {
-		_, err = pudge.Counter(dbPrefix+"/"+group, h.Arm, h.Cnt)
+		_, err = db.Counter(h.Arm, h.Cnt)
 		if err != nil {
 			break
 		}
@@ -168,6 +175,7 @@ func renderError(c *gin.Context, err error) {
 }
 
 func stats(c *gin.Context) {
+	t1 := time.Now()
 	var err error
 	group := c.Param("group")
 	var arms = make([]Arms, 0, 0)
@@ -181,12 +189,12 @@ func stats(c *gin.Context) {
 	}
 
 	count, _ := strconv.Atoi(c.Param("count"))
-	dbhits, err := pudge.Open("hits/"+group, nil)
+	dbhits, err := pudge.Open("hits/"+group, cfg)
 	if err != nil {
 		renderError(c, err)
 		return
 	}
-	dbrew, err := pudge.Open("rewards/"+group, nil)
+	dbrew, err := pudge.Open("rewards/"+group, cfg)
 	if err != nil {
 		renderError(c, err)
 		return
@@ -197,12 +205,18 @@ func stats(c *gin.Context) {
 			data = append(data, []byte(arm.Arm))
 		}
 	} else {
+
 		data, err = dbhits.Keys(nil, 0, 0, true)
 	}
 
 	if err != nil {
 		renderError(c, err)
 		return
+	}
+	t2 := time.Now()
+	if debug {
+		//log.Println("len", len(data))
+		//fmt.Printf("The t2 took %v to run.\n", t2.Sub(t1))
 	}
 	var stats = make([]Stat, 0, 0)
 	//var totalrew = 0
@@ -222,6 +236,13 @@ func stats(c *gin.Context) {
 		stat.Rew = rew
 		totalHits += hit
 		stats = append(stats, stat)
+	}
+	t3 := time.Now()
+	if debug {
+		_ = t1
+		_ = t2
+		_ = t3
+		//fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
 	var scores = make([]Stat, 0, 0)
 	for _, s := range stats {
