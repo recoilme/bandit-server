@@ -120,6 +120,19 @@ curl -X POST --data '[{"arm":"ads 2"},{"arm":"1"}]' -H "Content-Type: applicatio
 [GIN] 2018/11/20 - 19:07:12 | 200 |    2.396616ms |             ::1 | POST     /rewards/domainid42
 [GIN] 2018/11/20 - 19:07:21 | 200 |     710.533µs |             ::1 | GET      /stats/domainid42/2
 ```
+
+
+## Backup
+
+
+Надо выполнить запрос:
+``` 
+curl -X GET http://localhost:3000/backup/backup
+```
+последний параметр - backup - директория.
+
+Ответ - 200 ok
+
 # License
 
 Bandit-server is released under the [MIT License](http://www.opensource.org/licenses/MIT).

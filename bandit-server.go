@@ -69,6 +69,7 @@ func main() {
 	signal.Notify(quit, os.Interrupt, os.Kill)
 	<-quit
 	log.Println("Shutdown Server ...")
+	fmt.Println("Shutdown Server ...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -114,6 +115,7 @@ func InitRouter() *gin.Engine {
 	r.Use(globalRecover)
 
 	r.GET("/", ok)
+	r.GET("/backup/:dir", backup)
 	r.GET("/stats/:group/:count", stats)
 	r.POST("/stats/:group/:count", stats)
 	r.POST("/write/:param/:group", write)
@@ -122,6 +124,12 @@ func InitRouter() *gin.Engine {
 }
 
 func ok(c *gin.Context) {
+	c.String(http.StatusOK, "%s", "ok")
+}
+
+func backup(c *gin.Context) {
+	dir := c.Param("dir")
+	pudge.BackupAll(dir)
 	c.String(http.StatusOK, "%s", "ok")
 }
 
