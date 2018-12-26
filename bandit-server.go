@@ -21,6 +21,7 @@ import (
 var (
 	port  = 3000
 	debug = false
+	koef  = 1.0
 	cfg   *pudge.Config
 )
 
@@ -43,6 +44,7 @@ type Stat struct {
 func init() {
 	flag.IntVar(&port, "port", 3000, "http port")
 	flag.BoolVar(&debug, "debug", false, "--debug=true")
+	flag.Float64Var(&koef, "koef", 1.0, "--koef=1.0")
 	cfg = pudge.DefaultConfig()
 	cfg.StoreMode = 2
 }
@@ -50,7 +52,7 @@ func init() {
 func main() {
 
 	flag.Parse()
-
+	log.Println("port:", port, "debug:", debug, "koef:", koef)
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: InitRouter(),
@@ -277,5 +279,5 @@ func (st *Stat) calcScore(totalHits int) float64 {
 	if st.Hit == 0 {
 		return float64(math.Sqrt((2 * math.Log(float64(totalHits+1)))))
 	}
-	return float64(st.Rew)/float64(st.Hit) + math.Sqrt((2*math.Log(float64(totalHits)))/float64(st.Hit))
+	return (koef*float64(st.Rew))/float64(st.Hit) + math.Sqrt((2*math.Log(float64(totalHits)))/float64(st.Hit))
 }
