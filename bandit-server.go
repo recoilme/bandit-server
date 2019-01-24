@@ -254,6 +254,10 @@ func stats(c *gin.Context) {
 		_ = t3
 		//fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
+	if t3.Sub(t2) > (10 * time.Millisecond) {
+		fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
+	}
+
 	var scores = make([]Stat, 0, 0)
 	for _, s := range stats {
 		s.Score = s.calcScore(totalHits)
@@ -262,6 +266,11 @@ func stats(c *gin.Context) {
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i].Score > scores[j].Score
 	})
+	t4 := time.Now()
+	if t4.Sub(t2) > (10 * time.Millisecond) {
+		fmt.Printf("The t4 took %v to run.\n", t4.Sub(t2))
+	}
+
 	if len(scores) > count {
 		scores = scores[:count]
 	}
