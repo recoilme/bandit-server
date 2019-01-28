@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -231,22 +232,49 @@ func stats(c *gin.Context) {
 	var stats = make([]Stat, 0, 0)
 	//var totalrew = 0
 	var totalHits int
-	for _, key := range data {
+	var wg sync.WaitGroup
+	mutex := &sync.RWMutex{}
+	do := func(key []byte) {
+		defer wg.Done()
 		var hit, rew int
-		errGet := dbhits.Get(key, &hit)
-		if errGet != nil && errGet != pudge.ErrKeyNotFound {
-			err = errGet
-			break
-		}
+		//log.Println("key", key)
+		dbhits.Get(key, &hit)
 		dbrew.Get(key, &rew)
-		//totalrew += rew
+
+		mutex.Lock()
 		var stat Stat
 		stat.Arm = string(key)
 		stat.Hit = hit
 		stat.Rew = rew
 		totalHits += hit
 		stats = append(stats, stat)
+		mutex.Unlock()
+		return
 	}
+
+	for _, key := range data {
+		wg.Add(1)
+		go do(key)
+		/*
+				var hit, rew int
+				errGet := dbhits.Get(key, &hit)
+				if errGet != nil && errGet != pudge.ErrKeyNotFound {
+					err = errGet
+					break
+				}
+				dbrew.Get(key, &rew)
+
+
+			//totalrew += rew
+			var stat Stat
+			stat.Arm = string(key)
+			stat.Hit = hit
+			stat.Rew = rew
+			totalHits += hit
+			stats = append(stats, stat)
+		*/
+	}
+	wg.Wait()
 	t3 := time.Now()
 	if debug {
 		_ = t1
@@ -254,7 +282,7 @@ func stats(c *gin.Context) {
 		_ = t3
 		//fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
-	if t3.Sub(t2) > (10 * time.Millisecond) {
+	if t3.Sub(t2) > (20 * time.Millisecond) {
 		fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
 
@@ -266,10 +294,10 @@ func stats(c *gin.Context) {
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i].Score > scores[j].Score
 	})
-	t4 := time.Now()
-	if t4.Sub(t2) > (10 * time.Millisecond) {
-		fmt.Printf("The t4 took %v to run.\n", t4.Sub(t2))
-	}
+	//t4 := time.Now()
+	//if t4.Sub(t2) > (10 * time.Millisecond) {
+	//	fmt.Printf("The t4 took %v to run.\n", t4.Sub(t2))
+	//}
 
 	if len(scores) > count {
 		scores = scores[:count]
