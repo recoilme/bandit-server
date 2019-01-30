@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"sort"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,7 +53,7 @@ func init() {
 func main() {
 
 	flag.Parse()
-	log.Println("port:", port, "debug:", debug, "koef:", koef)
+	log.Println("port:", port, "debug:", debug, "koef:", koef, "maxproc:", runtime.GOMAXPROCS(0))
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: InitRouter(),
@@ -232,49 +232,26 @@ func stats(c *gin.Context) {
 	var stats = make([]Stat, 0, 0)
 	//var totalrew = 0
 	var totalHits int
-	var wg sync.WaitGroup
-	mutex := &sync.RWMutex{}
-	do := func(key []byte) {
-		defer wg.Done()
+
+	for _, key := range data {
+
 		var hit, rew int
-		//log.Println("key", key)
-		dbhits.Get(key, &hit)
+		errGet := dbhits.Get(key, &hit)
+		if errGet != nil && errGet != pudge.ErrKeyNotFound {
+			err = errGet
+			break
+		}
 		dbrew.Get(key, &rew)
 
-		mutex.Lock()
+		//totalrew += rew
 		var stat Stat
 		stat.Arm = string(key)
 		stat.Hit = hit
 		stat.Rew = rew
 		totalHits += hit
 		stats = append(stats, stat)
-		mutex.Unlock()
-		return
 	}
 
-	for _, key := range data {
-		wg.Add(1)
-		go do(key)
-		/*
-				var hit, rew int
-				errGet := dbhits.Get(key, &hit)
-				if errGet != nil && errGet != pudge.ErrKeyNotFound {
-					err = errGet
-					break
-				}
-				dbrew.Get(key, &rew)
-
-
-			//totalrew += rew
-			var stat Stat
-			stat.Arm = string(key)
-			stat.Hit = hit
-			stat.Rew = rew
-			totalHits += hit
-			stats = append(stats, stat)
-		*/
-	}
-	wg.Wait()
 	t3 := time.Now()
 	if debug {
 		_ = t1
@@ -283,7 +260,7 @@ func stats(c *gin.Context) {
 		//fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
 	if t3.Sub(t2) > (20 * time.Millisecond) {
-		fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
+		fmt.Printf("The t3 took %v to run. With %d %d  %+v req \n", t3.Sub(t2), count, len(arms), c.Request.Method)
 	}
 
 	var scores = make([]Stat, 0, 0)
