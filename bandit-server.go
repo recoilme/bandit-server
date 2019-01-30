@@ -23,7 +23,7 @@ var (
 	port  = 3000
 	debug = false
 	koef  = 1.0
-	cfg   *pudge.Config
+	//cfg   *pudge.Config
 )
 
 type Hit struct {
@@ -46,8 +46,8 @@ func init() {
 	flag.IntVar(&port, "port", 3000, "http port")
 	flag.BoolVar(&debug, "debug", false, "--debug=true")
 	flag.Float64Var(&koef, "koef", 1.0, "--koef=1.0")
-	cfg = pudge.DefaultConfig()
-	cfg.StoreMode = 2
+	//cfg = pudge.DefaultConfig()
+	//cfg.StoreMode = 2
 }
 
 func main() {
@@ -158,13 +158,14 @@ func write(c *gin.Context) {
 		renderError(c, err)
 		return
 	}
-	db, err := pudge.Open(dbPrefix+"/"+group, cfg)
-	if err != nil {
-		renderError(c, err)
-		return
-	}
+	/*
+		db, err := pudge.Open(dbPrefix+"/"+group, cfg)
+		if err != nil {
+			renderError(c, err)
+			return
+		}*/
 	for _, h := range hits {
-		_, err = db.Counter(h.Arm, h.Cnt)
+		_, err = pudge.Counter(dbPrefix+"/"+group, h.Arm, h.Cnt)
 		if err != nil {
 			break
 		}
@@ -200,16 +201,17 @@ func stats(c *gin.Context) {
 	}
 
 	count, _ := strconv.Atoi(c.Param("count"))
-	dbhits, err := pudge.Open("hits/"+group, cfg)
-	if err != nil {
-		renderError(c, err)
-		return
-	}
-	dbrew, err := pudge.Open("rewards/"+group, cfg)
-	if err != nil {
-		renderError(c, err)
-		return
-	}
+	/*
+		dbhits, err := pudge.Open("hits/"+group, cfg)
+		if err != nil {
+			renderError(c, err)
+			return
+		}
+		dbrew, err := pudge.Open("rewards/"+group, cfg)
+		if err != nil {
+			renderError(c, err)
+			return
+		}*/
 	var data = make([][]byte, 0, 0)
 	if len(arms) > 0 {
 		for _, arm := range arms {
@@ -217,7 +219,7 @@ func stats(c *gin.Context) {
 		}
 	} else {
 
-		data, err = dbhits.Keys(nil, 0, 0, true)
+		data, err = pudge.Keys("hits/"+group, nil, 0, 0, true) //dbhits.Keys(nil, 0, 0, true)
 	}
 
 	if err != nil {
@@ -236,12 +238,13 @@ func stats(c *gin.Context) {
 	for _, key := range data {
 
 		var hit, rew int
-		errGet := dbhits.Get(key, &hit)
+		errGet := pudge.Get("hits/"+group, key, &hit) ///dbhits.Get(key, &hit)
 		if errGet != nil && errGet != pudge.ErrKeyNotFound {
 			err = errGet
 			break
 		}
-		dbrew.Get(key, &rew)
+		pudge.Get("rewards/"+group, key, &rew)
+		//dbrew.Get(key, &rew)
 
 		//totalrew += rew
 		var stat Stat
