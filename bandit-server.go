@@ -238,12 +238,17 @@ func stats(c *gin.Context) {
 	for _, key := range data {
 
 		var hit, rew int
+		t22 := time.Now()
 		errGet := pudge.Get("hits/"+group, key, &hit) ///dbhits.Get(key, &hit)
 		if errGet != nil && errGet != pudge.ErrKeyNotFound {
 			err = errGet
 			break
 		}
 		pudge.Get("rewards/"+group, key, &rew)
+		t23 := time.Now()
+		if t23.Sub(t22) > (20 * time.Millisecond) {
+			fmt.Printf("The t23 took %v to run. With  %s key \n", t23.Sub(t22), string(key))
+		}
 		//dbrew.Get(key, &rew)
 
 		//totalrew += rew
@@ -262,8 +267,8 @@ func stats(c *gin.Context) {
 		_ = t3
 		//fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
-	if t3.Sub(t2) > (20 * time.Millisecond) {
-		fmt.Printf("The t3 took %v to run. With %d %d  %+v req \n", t3.Sub(t2), count, len(arms), c.Request.Method)
+	if t3.Sub(t2) > (200 * time.Millisecond) {
+		fmt.Printf("The t3 took %v to run. With %d %v  %+v req \n", t3.Sub(t2), count, t3.Sub(t1), c.Request.Method)
 	}
 
 	var scores = make([]Stat, 0, 0)
