@@ -48,6 +48,8 @@ func init() {
 	flag.Float64Var(&koef, "koef", 1.0, "--koef=1.0")
 	//cfg = pudge.DefaultConfig()
 	//cfg.StoreMode = 2
+	pudge.Open("hits/relap", nil)
+	pudge.Open("rewards/relap", nil)
 }
 
 func main() {
@@ -59,31 +61,40 @@ func main() {
 		Handler: InitRouter(),
 	}
 
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// setup signal catching
+	quit := make(chan os.Signal, 1)
+	// catch all signals since not explicitly listing
+	signal.Notify(quit)
+
+	//signal.Notify(sigs,syscall.SIGQUIT)
+	// method invoked upon seeing signal
 	go func() {
-		// service connections
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+		q := <-quit
+		log.Printf("RECEIVED SIGNAL: %s", q)
+		//log.Println("Shutdown Server ...")
+		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Println("Server Shutdown:", err)
 		}
+		// Close db
+		log.Println("Close db ...")
+		if err := pudge.CloseAll(); err != nil {
+			log.Println("Database Shutdown err:", err)
+		}
+		log.Println("Close db")
+		log.Println("Server exiting")
+		time.Sleep(2 * time.Second)
+		//os.Exit(1)
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt, os.Kill)
-	<-quit
-	log.Println("Shutdown Server ...")
-	fmt.Println("Shutdown Server ...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+	//go func() {
+	// service connections
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("listen: %s\n", err)
 	}
-	// Close db
-	if err := pudge.CloseAll(); err != nil {
-		log.Fatal("Database Shutdown:", err)
-	}
-	log.Println("Server exiting")
+	//}()
 
 }
 
@@ -94,9 +105,12 @@ func globalRecover(c *gin.Context) {
 			if err := pudge.CloseAll(); err != nil {
 				log.Println("Database Shutdown err:", err)
 			}
-			log.Println("Server recovery with err:", err)
+			log.Printf("Server recovery with err:%+v\n", err)
 			gin.RecoveryWithWriter(gin.DefaultErrorWriter)
-			//c.AbortWithStatus(500)
+			c.AbortWithStatus(500)
+			return
+			//time.Sleep(200 * time.Millisecond)
+			//time.Sleep(2 * time.Second)
 		}
 	}(c)
 	c.Next()
@@ -137,6 +151,13 @@ func backup(c *gin.Context) {
 }
 
 func write(c *gin.Context) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered in write", r)
+		}
+	}()
+
 	var err error
 	group := c.Param("group")
 	param := c.Param("param")
@@ -187,6 +208,11 @@ func renderError(c *gin.Context, err error) {
 }
 
 func stats(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("Recovered in stats", r)
+		}
+	}()
 	t1 := time.Now()
 	var err error
 	group := c.Param("group")
@@ -201,6 +227,7 @@ func stats(c *gin.Context) {
 	}
 
 	count, _ := strconv.Atoi(c.Param("count"))
+
 	/*
 		dbhits, err := pudge.Open("hits/"+group, cfg)
 		if err != nil {
