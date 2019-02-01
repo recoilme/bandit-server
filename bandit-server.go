@@ -46,8 +46,6 @@ func init() {
 	flag.IntVar(&port, "port", 3000, "http port")
 	flag.BoolVar(&debug, "debug", false, "--debug=true")
 	flag.Float64Var(&koef, "koef", 1.0, "--koef=1.0")
-	//cfg = pudge.DefaultConfig()
-	//cfg.StoreMode = 2
 	pudge.Open("hits/relap", nil)
 	pudge.Open("rewards/relap", nil)
 }
