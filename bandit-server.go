@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +49,8 @@ func init() {
 	flag.Float64Var(&koef, "koef", 1.0, "--koef=1.0")
 	pudge.Open("hits/relap", nil)
 	pudge.Open("rewards/relap", nil)
+	// Workaround for issue #17393.
+	signal.Notify(make(chan os.Signal), syscall.SIGPIPE)
 }
 
 func main() {
@@ -70,6 +73,9 @@ func main() {
 	go func() {
 		q := <-quit
 		log.Printf("RECEIVED SIGNAL: %s", q)
+		if q == syscall.SIGPIPE || q.String() == "broken pipe" {
+			return
+		}
 		//log.Println("Shutdown Server ...")
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
@@ -143,9 +149,63 @@ func ok(c *gin.Context) {
 }
 
 func backup(c *gin.Context) {
+	clean(c)
 	dir := c.Param("dir")
+	log.Println("backup")
 	pudge.BackupAll(dir)
+	log.Println("end")
 	c.String(http.StatusOK, "%s", "ok")
+}
+
+func clean(c *gin.Context) {
+	hits, err := pudge.Keys("hits/relap", nil, 0, 0, true)
+	log.Println(len(hits))
+	if err != nil {
+		panic(err)
+	}
+	rew, err := pudge.Open("rewards/relap", nil)
+	rew2, err := pudge.Open("rewards/relap.new2", nil)
+	log.Println(rew.Count())
+	for _, k := range hits {
+		var b []byte
+		has, e := rew.Has(k)
+		if has && e == nil {
+			err := rew.Get(k, &b)
+			if err != nil {
+				panic(err)
+			}
+			e := rew2.Set(k, b)
+			if e != nil {
+				panic(e)
+			}
+		}
+	}
+	log.Println(rew2.Count())
+	rew2.Close()
+	pudge.Open("rewards/relap.new2", nil)
+
+	/*
+		if dir == "" {
+			dir = "backup"
+		}
+		dbs.Lock()
+		stores := dbs.dbs
+		dbs.Unlock()
+		//tmp := make(map[string]string)
+		for _, db := range stores {
+			backup := dir + "/" + db.name
+			DeleteFile(backup)
+			keys, err := db.Keys(nil, 0, 0, true)
+			if err == nil {
+				for _, k := range keys {
+					var b []byte
+					db.Get(k, &b)
+					Set(backup, k, b)
+				}
+			}
+			Close(backup)
+		}
+	*/
 }
 
 func write(c *gin.Context) {
