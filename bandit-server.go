@@ -90,7 +90,7 @@ func main() {
 		log.Println("Close db")
 		log.Println("Server exiting")
 		time.Sleep(2 * time.Second)
-		//os.Exit(1)
+		os.Exit(1)
 	}()
 
 	//go func() {
@@ -246,6 +246,7 @@ func write(c *gin.Context) {
 	for _, h := range hits {
 		_, err = pudge.Counter(dbPrefix+"/"+group, h.Arm, h.Cnt)
 		if err != nil {
+			log.Println("invalid_argument:", "'"+dbPrefix+"'", "'"+group+"'", "'"+h.Arm+"'", h.Cnt)
 			break
 		}
 	}
@@ -332,7 +333,7 @@ func stats(c *gin.Context) {
 		pudge.Get("rewards/"+group, key, &rew)
 		t23 := time.Now()
 		if t23.Sub(t22) > (20 * time.Millisecond) {
-			fmt.Printf("The t23 took %v to run. With  %s key \n", t23.Sub(t22), string(key))
+			//fmt.Printf("The t23 took %v to run. With  %s key \n", t23.Sub(t22), string(key))
 		}
 		//dbrew.Get(key, &rew)
 
@@ -353,7 +354,7 @@ func stats(c *gin.Context) {
 		//fmt.Printf("The t3 took %v to run.\n", t3.Sub(t2))
 	}
 	if t3.Sub(t2) > (200 * time.Millisecond) {
-		fmt.Printf("The t3 took %v to run. With %d %v  %+v req \n", t3.Sub(t2), count, t3.Sub(t1), c.Request.Method)
+		//fmt.Printf("The t3 took %v to run. With %d %v  %+v req \n", t3.Sub(t2), count, t3.Sub(t1), c.Request.Method)
 	}
 
 	var scores = make([]Stat, 0, 0)
