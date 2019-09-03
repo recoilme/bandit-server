@@ -13,7 +13,6 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -50,7 +49,7 @@ func init() {
 	pudge.Open("hits/relap", nil)
 	pudge.Open("rewards/relap", nil)
 	// Workaround for issue #17393.
-	signal.Notify(make(chan os.Signal), syscall.SIGPIPE)
+	//signal.Notify(make(chan os.Signal), syscall.SIGPIPE)
 }
 
 func main() {
@@ -73,11 +72,11 @@ func main() {
 	go func() {
 		q := <-quit
 		log.Printf("RECEIVED SIGNAL: %s", q)
-		if q == syscall.SIGPIPE || q.String() == "broken pipe" {
-			return
-		}
+		//if q == syscall.SIGPIPE || q.String() == "broken pipe" {
+		//return
+		//}
 		//log.Println("Shutdown Server ...")
-		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), 2000*time.Millisecond)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Println("Server Shutdown:", err)
@@ -244,6 +243,12 @@ func write(c *gin.Context) {
 			return
 		}*/
 	for _, h := range hits {
+		if dbPrefix == "rewards" {
+			has, err := pudge.Has("hits/"+group, h.Arm)
+			if !has || err != nil {
+				continue
+			}
+		}
 		_, err = pudge.Counter(dbPrefix+"/"+group, h.Arm, h.Cnt)
 		if err != nil {
 			log.Println("invalid_argument:", "'"+dbPrefix+"'", "'"+group+"'", "'"+h.Arm+"'", h.Cnt)
@@ -304,8 +309,11 @@ func stats(c *gin.Context) {
 			data = append(data, []byte(arm.Arm))
 		}
 	} else {
-
-		data, err = pudge.Keys("hits/"+group, nil, 0, 0, true) //dbhits.Keys(nil, 0, 0, true)
+		//log.Println("Error: stats without arms:", arms)
+		err = errors.New("Error: stats without arms")
+		renderError(c, err)
+		return
+		//data, err = pudge.Keys("hits/"+group, nil, 0, 0, true) //dbhits.Keys(nil, 0, 0, true)
 	}
 
 	if err != nil {
